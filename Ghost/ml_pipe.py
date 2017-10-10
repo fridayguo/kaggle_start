@@ -3,7 +3,9 @@
 import pandas as pd
 import numpy as np
 # from sklearn.metrics import r2_score,mean_squared_error
-from sklearn.model_selection import cross_val_score, GridSearchCV,cross_validate
+# from sklearn.model_selection import cross_val_score, GridSearchCV,cross_validate
+from sklearn.model_selection import GridSearchCV,cross_validate
+
 import sklearn.metrics as metrics
 import xgboost as xgb
 import matplotlib.pylab as plt
@@ -247,7 +249,7 @@ class XGBC_ML(MLPipe):
 
 is_test = 0
 if is_test == 1:
-    ml = XGBC_ML(train_file='./train.csv', test_file='./test.csv',
+    ml = XGBC_ML(train_file='../Ghost/train.csv', test_file='../Ghost/test.csv',
                 y_col='type', id_col='id', ft_name='ghost', type_c_or_r='c')
 else:
     ml = XGBC_ML(train_file='../driver/train.csv', test_file='../driver//test.csv',
