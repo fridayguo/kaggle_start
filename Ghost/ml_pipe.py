@@ -138,6 +138,25 @@ class MLPipe:
         print('XXXX out_res_file to %s' % out_file)
         output.to_csv(out_file, index=False)
 
+    def get_dummies(self):
+        nrow = self.all_df.shape[0]
+        min_cate = max(10, nrow * 0.01)
+        unique_num = self.all_df.nunique(axis=0)
+        print('#'*80)
+        print('get_dummies: nrow:%d min_cate:%d' %(nrow, min_cate) )
+        print(unique_num)
+
+        cate_col_num = unique_num[unique_num <= min_cate]
+
+        sep_list=['col_is_train', self.id_col, self.y_col]
+        cate_col_name = [val for val in cate_col_num.index.tolist() if val not in sep_list ]
+        # get col index
+        # cate_index = [id for id, val in enumerate(train.columns.tolist()) if val in cate_col_name]
+
+        # get dummies
+        self.all_df = pd.get_dummies(self.all_df, columns=cate_col_name, drop_first=True)
+        print(self.all_df.columns)
+        print('#' * 80)
 
 class XGBC_ML(MLPipe):
     # print("MSE:",mean_squared_error(y_eval, y_pred))
@@ -242,12 +261,27 @@ class XGBC_ML(MLPipe):
         print()
         print("best score:%f best params:%s" %(gv.best_score_, gv.best_params_))
 
+class CDrive(XGBC_ML):
+    def transform_df(df):
+        df = pd.DataFrame(df)
+        dcol = [c for c in df.columns if c not in ['id', 'target']]
+        df['ps_cat_13xps_reg_03'] = df['ps_car_13'] * df['ps_reg_03']
+        df['negative_one_vals'] = df[dcol].apply(lambda row: sum(row[:] == -1), axis=1)
+        for c in dcol:
+            df[c + str('_mean_range')] = (df[c].values > d_median[c]).astype(int)
+        return df
 
-
-########################################################3
+    cat("Feature engineering")
+    data[, amount_nas: = rowSums(data == -1, na.rm = T)]
+    data[, high_nas: = ifelse(amount_nas > 4, 1, 0)]
+    data[, ps_car_13_ps_reg_03: = ps_car_13 * ps_reg_03]
+    data[, ps_reg_mult: = ps_reg_01 * ps_reg_02 * ps_reg_03]
+    data[,
+    ps_ind_bin_sum: = ps_ind_06_bin + ps_ind_07_bin + ps_ind_08_bin + ps_ind_09_bin + ps_ind_10_bin + ps_ind_11_bin + ps_ind_12_bin + ps_ind_13_bin + ps_ind_16_bin + ps_ind_17_bin + ps_ind_18_bin]
+    ########################################################3
 ## main
 
-is_test = 0
+is_test = 1
 if is_test == 1:
     ml = XGBC_ML(train_file='../Ghost/train.csv', test_file='../Ghost/test.csv',
                 y_col='type', id_col='id', ft_name='ghost', type_c_or_r='c')
@@ -256,6 +290,8 @@ else:
                 y_col='target', id_col='id', ft_name='driver', type_c_or_r='c')
 
 ml.parse_file()
+ml.get_dummies()
+
 ml.split_X_y()
 print ml.gen_model()
 
@@ -269,7 +305,7 @@ cv_params = {'max_depth': [2, 3, 4, 5, 6], 'min_child_weight': [1,5]}
 
 #ml.mod_gv(cv_params)
 
-ml.mod_cv()
+#ml.mod_cv()
 
 # ml.mod_fit(plot_imp=False)
 # ml.out_res_file(is_pred_prob=True)
